@@ -1,1 +1,2 @@
-test.text
+__pycache__
+.env

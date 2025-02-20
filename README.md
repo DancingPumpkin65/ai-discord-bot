@@ -1,1 +1,1 @@
-# ai-discord-bot
+# AI Discord Bot
