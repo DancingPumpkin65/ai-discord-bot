@@ -28,7 +28,12 @@ async def send_message(message: Message, user_message: str = None, image_file: s
     
     try:
         response: str = await get_response(user_message or "", image_file, image_format)
-        await message.author.send(response) if is_private else await message.channel.send(response)
+        
+        # Split the response into chunks of 2000 characters (Discord's limit is 4000, but we use 2000 for safety)
+        response_chunks = [response[i:i+2000] for i in range(0, len(response), 2000)]
+        
+        for chunk in response_chunks:
+            await message.author.send(chunk) if is_private else await message.channel.send(chunk)
     except Exception as e:
         print(e)
 
