@@ -54,6 +54,13 @@ async def on_message(message: Message) -> None:
 
     print(f'[{channel}] {username}: {user_message}')
 
+    # Check if the message starts with the prefix "!lumos"
+    if not user_message.startswith('!lumos'):
+        return
+
+    # Remove the prefix from the message
+    user_message = user_message[len('!lumos'):].strip()
+
     image_file = None
     image_format = None
 
