@@ -7,6 +7,7 @@ from dotenv import load_dotenv
 from discord.ext import commands, tasks
 from discord import Intents, Attachment, Embed, version_info as discord_version
 from responses import get_response
+import difflib  # For finding similar commands
 
 # Load the environment variables
 load_dotenv()
@@ -22,7 +23,15 @@ start_time = time.time()
 # Set up the bot with a command prefix
 intents: Intents = Intents.default()
 intents.message_content = True
-bot = commands.Bot(command_prefix='!', intents=intents)
+bot = commands.Bot(command_prefix='!', intents=intents, help_command=None)  # Disable default help to use our custom one
+
+# Available commands dictionary for suggestions
+COMMANDS = {
+    'help': 'Shows the help message with available commands',
+    'info': 'Shows information about the bot',
+    'ping': 'Shows the bot\'s latency',
+    'lumos': 'Interact with the bot using the AI model'
+}
 
 def get_uptime() -> str:
     """Calculate and format the bot's uptime"""
@@ -42,6 +51,17 @@ def get_uptime() -> str:
     
     return " ".join(parts)
 
+def get_command_suggestion(cmd: str) -> str:
+    """Get a command suggestion based on user input"""
+    # Get list of available commands
+    available_commands = list(COMMANDS.keys())
+    
+    # Find closest match
+    matches = difflib.get_close_matches(cmd, available_commands, n=1, cutoff=0.5)
+    if matches:
+        return matches[0]
+    return None
+
 # Event: Bot is ready
 @bot.event
 async def on_ready():
@@ -52,9 +72,14 @@ async def on_ready():
         daily_announcement.start()
         print("Daily announcement task started.")
 
+    # Set status
+    activity = discord.Activity(type=discord.ActivityType.listening, name="!help")
+    await bot.change_presence(activity=activity)
+
 # Enhanced Command: Ping with latency
 @bot.command(name='ping')
 async def ping(ctx):
+    """Shows the bot's latency"""
     start_time = time.time()
     msg = await ctx.send('Pinging...')
     end_time = time.time()
@@ -66,6 +91,7 @@ async def ping(ctx):
 # Enhanced Command: Info with more details
 @bot.command(name='info')
 async def info(ctx):
+    """Shows information about the bot"""
     embed = Embed(title="Bot Information", color=0x2ecc71)
     embed.add_field(name="Name", value="AI Discord Bot", inline=True)
     embed.add_field(name="Version", value=BOT_VERSION, inline=True)
@@ -81,38 +107,82 @@ async def info(ctx):
 
 # Enhanced Command: Help with embeds
 @bot.command(name='help')
-async def help_command(ctx):
-    embed = Embed(title="Bot Help", description="List of available commands:", color=0x3498db)
-    embed.add_field(name="!help", value="Shows this help message", inline=False)
-    embed.add_field(name="!info", value="Shows information about the bot", inline=False)
-    embed.add_field(name="!ping", value="Shows the bot's latency", inline=False)
-    embed.add_field(name="!lumos <message>", value="Interact with the bot using the AI model", inline=False)
-    embed.set_footer(text=f"Bot created by {BOT_CREATOR}")
-    
-    await ctx.send(embed=embed)
+async def help_command(ctx, command_name: str = None):
+    """Shows the help message with available commands"""
+    if command_name:
+        # Show help for specific command
+        cmd_name = command_name.lower().strip()
+        
+        # Handle commands with aliases or additional details
+        if cmd_name in COMMANDS:
+            embed = Embed(title=f"Help: !{cmd_name}", description=COMMANDS[cmd_name], color=0x3498db)
+            
+            # Add specific usage examples
+            if cmd_name == 'lumos':
+                embed.add_field(name="Usage", value="!lumos <your question or prompt>", inline=False)
+                embed.add_field(name="Example", value="!lumos What is artificial intelligence?", inline=False)
+                embed.add_field(name="With Image", value="You can also attach an image with your prompt", inline=False)
+            elif cmd_name == 'ping':
+                embed.add_field(name="Usage", value="!ping", inline=False)
+                embed.add_field(name="Description", value="Shows the bot's response time and API latency", inline=False)
+            
+            embed.set_footer(text="Type !help for a list of all commands")
+        else:
+            # Command not found - suggest similar commands
+            suggestion = get_command_suggestion(cmd_name)
+            embed = Embed(title="Command Not Found", color=0xe74c3c)
+            embed.description = f"The command `!{cmd_name}` was not found."
+            
+            if suggestion:
+                embed.add_field(name="Did you mean?", value=f"!{suggestion}", inline=False)
+            
+            embed.add_field(name="Available Commands", value="Type `!help` to see all available commands", inline=False)
+            
+        await ctx.send(embed=embed)
+    else:
+        # Show general help
+        embed = Embed(title="Bot Help", description="List of available commands:", color=0x3498db)
+        
+        for cmd, desc in COMMANDS.items():
+            embed.add_field(name=f"!{cmd}", value=desc, inline=False)
+            
+        embed.add_field(name="Detailed Help", value="Type `!help <command>` for more info on a specific command", inline=False)
+        embed.set_footer(text=f"Bot created by {BOT_CREATOR}")
+        
+        await ctx.send(embed=embed)
 
 # Command: Process message with !lumos prefix
 @bot.command(name='lumos')
 async def lumos(ctx, *, user_message: str = None):
-    try:
-        image_file = None
-        image_format = None
-
-        if ctx.message.attachments:
-            attachment = ctx.message.attachments[0]
-            image_file = attachment.filename
-            image_format = attachment.filename.split('.')[-1]
-            await attachment.save(image_file)
-
-        response = await get_response(user_message or "", image_file, image_format)
-        response_chunks = [response[i:i+2000] for i in range(0, len(response), 2000)]
+    """Interact with the bot using the AI model"""
+    # If no message provided
+    if not user_message and not ctx.message.attachments:
+        await ctx.send("Please provide a message or attach an image. Type `!help lumos` for usage examples.")
+        return
         
-        for chunk in response_chunks:
-            await ctx.send(chunk)
+    try:
+        # Show typing indicator while processing
+        async with ctx.typing():
+            image_file = None
+            image_format = None
+
+            if ctx.message.attachments:
+                attachment = ctx.message.attachments[0]
+                image_file = attachment.filename
+                image_format = attachment.filename.split('.')[-1]
+                await attachment.save(image_file)
+
+            response = await get_response(user_message or "", image_file, image_format)
+            
+            # Split response into chunks if it's too long
+            response_chunks = [response[i:i+2000] for i in range(0, len(response), 2000)]
+            
+            for chunk in response_chunks:
+                await ctx.send(chunk)
             
     except Exception as e:
         print(f"Error in lumos command: {str(e)}")
-        await ctx.send("Sorry, I encountered an error while processing your request.")
+        await ctx.send("Sorry, I encountered an error while processing your request. Please try again later.")
 
 # Define the daily scheduled task
 @tasks.loop(hours=24)
@@ -141,18 +211,68 @@ async def daily_announcement():
     except Exception as e:
         print(f"ERROR: Failed to send daily announcement: {str(e)}")
 
-# Error handling for commands
+# Enhanced error handling for commands
 @bot.event
 async def on_command_error(ctx, error):
     if isinstance(error, commands.CommandNotFound):
-        await ctx.send("Command not found. Use `!help` to see available commands.")
+        # Extract the attempted command name from the error message
+        command = ctx.message.content.split()[0][1:]  # Remove the prefix
+        suggestion = get_command_suggestion(command)
+        
+        embed = Embed(title="Command Not Found", color=0xe74c3c)
+        embed.description = f"The command `!{command}` was not found."
+        
+        if suggestion:
+            embed.add_field(name="Did you mean?", value=f"!{suggestion}", inline=False)
+        
+        embed.add_field(name="Available Commands", value="Type `!help` to see all available commands", inline=False)
+        await ctx.send(embed=embed)
+        
     elif isinstance(error, commands.MissingRequiredArgument):
-        await ctx.send(f"Missing required argument: {error.param.name}")
+        embed = Embed(title="Missing Argument", color=0xe74c3c)
+        embed.description = f"The command is missing a required argument: `{error.param.name}`"
+        
+        # Add command-specific help
+        command = ctx.command.name
+        embed.add_field(name="Usage", value=f"Type `!help {command}` for proper usage", inline=False)
+        
+        await ctx.send(embed=embed)
+        
     elif isinstance(error, commands.BadArgument):
-        await ctx.send(f"Bad argument: {str(error)}")
+        embed = Embed(title="Invalid Argument", color=0xe74c3c)
+        embed.description = f"Invalid argument provided for command `!{ctx.command.name}`"
+        embed.add_field(name="Details", value=str(error), inline=False)
+        embed.add_field(name="Usage", value=f"Type `!help {ctx.command.name}` for proper usage", inline=False)
+        
+        await ctx.send(embed=embed)
+        
+    elif isinstance(error, commands.CommandOnCooldown):
+        # For rate-limited commands
+        minutes, seconds = divmod(error.retry_after, 60)
+        hours, minutes = divmod(minutes, 60)
+        
+        if int(hours):
+            time_format = f"{int(hours)} hours, {int(minutes)} minutes, and {int(seconds)} seconds"
+        elif int(minutes):
+            time_format = f"{int(minutes)} minutes and {int(seconds)} seconds"
+        else:
+            time_format = f"{int(seconds)} seconds"
+            
+        embed = Embed(title="Command on Cooldown", color=0xe74c3c)
+        embed.description = f"This command is on cooldown. Please try again in {time_format}."
+        await ctx.send(embed=embed)
+        
     else:
+        # For other, unexpected errors
         print(f"Command error: {str(error)}")
-        await ctx.send(f"An error occurred while executing the command: {str(error)}")
+        embed = Embed(title="Error", color=0xe74c3c)
+        embed.description = "An unexpected error occurred while processing your command."
+        embed.add_field(name="Error Details", value=str(error)[:1024], inline=False)  # Truncate if too long
+        
+        await ctx.send(embed=embed)
+
+# Import discord for status
+import discord
 
 # Main entry point
 def main():
