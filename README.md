@@ -34,10 +34,11 @@ This is a Discord bot that uses OpenAI's GPT-4o model to generate responses to u
 ```
 
 4. Set up the environment variables:
-    Create a `.env` file in the root directory and add your Discord token:
+    Create a `.env` file in the root directory and add your `Discord token`, `AI API` and `Channel Discord ID`:
 ```sh
     DISCORD_TOKEN=YOUR_DISCORD_TOKEN
     OPENAI_API_KEY=YOUR_OPENAI_API_KEY
+    ANNOUNCEMENT_CHANNEL_ID=YOUR_CHANNEL_ID
 ```
 
 ## Running the Discord Bot
