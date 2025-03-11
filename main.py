@@ -17,6 +17,10 @@ BOT_VERSION: Final[str] = "1.0.0"
 BOT_CREATOR: Final[str] = "MAHITO"
 ANNOUNCEMENT_CHANNEL_ID: Final[int] = int(os.getenv('ANNOUNCEMENT_CHANNEL_ID', '0'))  # Set your default channel ID in .env
 
+# Bot memory storage for conversations
+USER_CONVERSATIONS = {}  # Store conversation history by user ID
+MAX_MEMORY_LENGTH = 10   # Maximum number of conversation turns to remember
+
 # Track start time for uptime command
 start_time = time.time()
 
@@ -30,7 +34,9 @@ COMMANDS = {
     'help': 'Shows the help message with available commands',
     'info': 'Shows information about the bot',
     'ping': 'Shows the bot\'s latency',
-    'lumos': 'Interact with the bot using the AI model'
+    'lumos': 'Interact with the bot using the AI model',
+    'memory': 'View or clear your conversation history with the bot',
+    'config': 'Configure bot settings for this server (admin only)'
 }
 
 def get_uptime() -> str:

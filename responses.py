@@ -6,10 +6,15 @@ from dotenv import load_dotenv
 
 load_dotenv()
 
+# Configure endpoint and API key
+endpoint = os.getenv("AZURE_ENDPOINT", "https://models.inference.ai.azure.com")
+api_key = os.getenv("OPENAI_API_KEY")
+model_name = os.getenv("MODEL_NAME", "gpt-4o")
+
 # Initialize OpenAI client
 ai_client = OpenAI(
-    base_url="https://models.inference.ai.azure.com",
-    api_key=os.getenv("OPENAI_API_KEY"),
+    base_url=endpoint,
+    api_key=api_key,
 )
 
 def get_image_data_url(image_file: str, image_format: str) -> str:
@@ -55,14 +60,14 @@ async def ai_fallback_response(user_input: str) -> str:
             messages=[
                 {
                     "role": "system",
-                    "content": "",
+                    "content": "You are a helpful assistant.",
                 },
                 {
                     "role": "user",
                     "content": user_input,
                 }
             ],
-            model="gpt-4o",
+            model=model_name,
             temperature=1,
             max_tokens=4096,
             top_p=1
@@ -90,7 +95,7 @@ async def ai_image_response(user_input: str, image_file: str, image_format: str)
                     "content": [
                         {
                             "type": "text",
-                            "text": user_input,
+                            "text": user_input or "What's in this image?",
                         },
                         {
                             "type": "image_url",
@@ -102,7 +107,7 @@ async def ai_image_response(user_input: str, image_file: str, image_format: str)
                     ],
                 },
             ],
-            model="gpt-4o",
+            model=model_name,
             temperature=1,
             max_tokens=4096,
             top_p=1

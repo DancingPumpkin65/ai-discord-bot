@@ -7,37 +7,53 @@ This is a Discord bot that uses OpenAI's GPT-4o model to generate responses to u
 ```text
     ai-discord-bot
     ├── .env                   # Environment variables
+    ├── .env.example           # Example environment variables configuration
     ├── main.py                # The main bot service that handles Discord events
-    ├── responses.py           # The module that provides responses to user inputs using your AI Model
+    ├── responses.py           # The module that provides responses to user inputs using your AI Modelides responses to user inputs using your AI Model
     ├── requirements.txt       # Project dependencies
-    └── README.md              # Project documentation
-```
+    └── README.md              # Project documentation └── README.md              # Project documentation
+``````
 
-## Setup
+## Setup## Setup
 
-1. Clone the repository:
+1. Clone the repository:one the repository:
 ```sh
-    git clone https://github.com/DancingPumpkin65/ai-discord-bot.git
-    cd ai-discord-bot
-```
+    git clone https://github.com/DancingPumpkin65/ai-discord-bot.git/github.com/DancingPumpkin65/ai-discord-bot.git
+    cd ai-discord-bot cd ai-discord-bot
+``````
 
-2. Create and activate a virtual environment:
+2. Create and activate a virtual environment:eate and activate a virtual environment:
 ```sh
     python -m venv env
     source env/Scripts/activate  # On Windows
-    source env/bin/activate      # On Unix or MacOS
-```
+    source env/bin/activate      # On Unix or MacOS source env/bin/activate      # On Unix or MacOS
+``````
 
-3. Install the dependencies:
+3. Install the dependencies:stall the dependencies:
 ```sh
-    pip install -r requirements.txt
-```
+    pip install -r requirements.txt pip install -r requirements.txt
+``````
 
 4. Set up the environment variables:
-    Create a `.env` file in the root directory and add your `Discord token`, `AI API` and `Channel Discord ID`:
+    Create a `.env` file in the root directory based on `.env.example`:reate a `.env` file in the root directory based on the `.env.example` file:
 ```sh
     DISCORD_TOKEN=YOUR_DISCORD_TOKEN
     OPENAI_API_KEY=YOUR_OPENAI_API_KEY
+    ANNOUNCEMENT_CHANNEL_ID=YOUR_CHANNEL_ID DISCORD_TOKEN=YOUR_DISCORD_TOKEN
+    AZURE_ENDPOINT=https://models.inference.ai.azure.com    OPENAI_API_KEY=YOUR_OPENAI_API_KEY
+    MODEL_NAME=gpt-4oD=YOUR_CHANNEL_ID
+```    AZURE_OPENAI_ENDPOINT=https://your-resource-name.openai.azure.com
+SION=2023-05-15
+## Running the Discord BotZURE_DEPLOYMENT_NAME=deployment-name
+
+1. Start the bot:
+```sh    For standard OpenAI API:
+python main.py
+```
+
+
+
+This project is licensed under the MIT License. See the `LICENSE` file for details.## License    OPENAI_API_KEY=YOUR_OPENAI_API_KEY
     ANNOUNCEMENT_CHANNEL_ID=YOUR_CHANNEL_ID
 ```
 
