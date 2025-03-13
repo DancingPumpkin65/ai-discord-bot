@@ -12,7 +12,7 @@ This is a Discord bot that uses OpenAI's GPT-4o model to generate responses to u
     ├── responses.py           # The module that provides responses to user inputs using your AI Modelides responses to user inputs using your AI Model
     ├── requirements.txt       # Project dependencies
     └── README.md              # Project documentation └── README.md              # Project documentation
-``````
+```
 
 ## Setup## Setup
 
