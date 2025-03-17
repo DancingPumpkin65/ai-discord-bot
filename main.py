@@ -8,6 +8,8 @@ from discord.ext import commands, tasks
 from discord import Intents, Attachment, Embed, version_info as discord_version
 from responses import get_response
 import difflib  # For finding similar commands
+import discord
+from welcome_card import create_welcome_card, create_welcome_embed
 
 # Load the environment variables
 load_dotenv()
@@ -16,6 +18,8 @@ TOKEN: Final[str] = os.getenv('DISCORD_TOKEN')
 BOT_VERSION: Final[str] = "1.0.0"
 BOT_CREATOR: Final[str] = "MAHITO"
 ANNOUNCEMENT_CHANNEL_ID: Final[int] = int(os.getenv('ANNOUNCEMENT_CHANNEL_ID', '0'))  # Set your default channel ID in .env
+WELCOME_CHANNEL_ID: Final[int] = int(os.getenv('WELCOME_CHANNEL_ID', '0'))  # Channel ID for welcome messages
+WELCOME_BACKGROUND_URL: Final[str] = os.getenv('WELCOME_BACKGROUND_URL', '')  # Optional background image URL
 
 # Bot memory storage for conversations
 USER_CONVERSATIONS = {}  # Store conversation history by user ID
@@ -36,7 +40,8 @@ COMMANDS = {
     'ping': 'Shows the bot\'s latency',
     'lumos': 'Interact with the bot using the AI model',
     'memory': 'View or clear your conversation history with the bot',
-    'config': 'Configure bot settings for this server (admin only)'
+    'config': 'Configure bot settings for this server (admin only)',
+    'welcome': 'Test the welcome card feature (admin only)'
 }
 
 def get_uptime() -> str:
@@ -276,6 +281,91 @@ async def on_command_error(ctx, error):
         embed.add_field(name="Error Details", value=str(error)[:1024], inline=False)  # Truncate if too long
         
         await ctx.send(embed=embed)
+
+# New command for testing welcome cards
+@bot.command(name='welcome')
+@commands.has_permissions(administrator=True)
+async def test_welcome(ctx):
+    """Test the welcome card feature (admin only)"""
+    try:
+        async with ctx.typing():
+            # Generate welcome card for the command user
+            card_buffer = await create_welcome_card(
+                username=ctx.author.display_name,
+                avatar_url=ctx.author.display_avatar.url,
+                server_name=ctx.guild.name,
+                member_count=ctx.guild.member_count,
+                background_url=WELCOME_BACKGROUND_URL,
+                custom_message="Welcome card test!"
+            )
+            
+            if card_buffer:
+                # Create accompanying embed
+                welcome_embed = create_welcome_embed(
+                    username=ctx.author.display_name,
+                    server_name=ctx.guild.name,
+                    member_count=ctx.guild.member_count,
+                    user_id=ctx.author.id
+                )
+                
+                # Update the embed to make it clear it's a test
+                welcome_embed.title = "Welcome Card Test"
+                welcome_embed.set_footer(text=f"Test card for {ctx.author.display_name}")
+                
+                # Send the welcome card with the embed
+                await ctx.send(
+                    content="Here's a preview of the welcome card:",
+                    file=discord.File(fp=card_buffer, filename="welcome.png"),
+                    embed=welcome_embed
+                )
+            else:
+                await ctx.send("Error generating welcome card.")
+    except Exception as e:
+        print(f"Error in welcome command: {str(e)}")
+        await ctx.send(f"Failed to generate welcome card: {str(e)}")
+
+# Add new member welcome event
+@bot.event
+async def on_member_join(member):
+    """Event handler that triggers when a new member joins"""
+    if WELCOME_CHANNEL_ID == 0:
+        print("WARNING: No welcome channel ID set. Skipping welcome message.")
+        return
+    
+    try:
+        welcome_channel = bot.get_channel(WELCOME_CHANNEL_ID)
+        if welcome_channel:
+            # Generate welcome card
+            card_buffer = await create_welcome_card(
+                username=member.display_name,
+                avatar_url=member.display_avatar.url,
+                server_name=member.guild.name,
+                member_count=member.guild.member_count,
+                background_url=WELCOME_BACKGROUND_URL
+            )
+            
+            if card_buffer:
+                # Create accompanying embed
+                welcome_embed = create_welcome_embed(
+                    username=member.display_name,
+                    server_name=member.guild.name,
+                    member_count=member.guild.member_count,
+                    user_id=member.id
+                )
+                
+                # Send the welcome card with the embed
+                await welcome_channel.send(
+                    content=f"Welcome {member.mention} to the server!",
+                    file=discord.File(fp=card_buffer, filename="welcome.png"),
+                    embed=welcome_embed
+                )
+                print(f"Welcome card sent for {member.display_name}")
+            else:
+                await welcome_channel.send(f"Welcome {member.mention} to the server!")
+        else:
+            print(f"ERROR: Could not find welcome channel with ID {WELCOME_CHANNEL_ID}")
+    except Exception as e:
+        print(f"ERROR: Failed to send welcome message: {str(e)}")
 
 # Import discord for status
 import discord
