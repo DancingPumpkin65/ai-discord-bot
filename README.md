@@ -51,17 +51,29 @@ SION=2023-05-15
 python main.py
 ```
 
+## Features
 
+### Welcome Cards
+The bot creates beautiful welcome cards for new members with:
+- Customizable backgrounds (URL or uploaded images)
+- Member count and personalized welcome message
+- Professionally designed layout with user's avatar
 
-This project is licensed under the MIT License. See the `LICENSE` file for details.## License    OPENAI_API_KEY=YOUR_OPENAI_API_KEY
-    ANNOUNCEMENT_CHANNEL_ID=YOUR_CHANNEL_ID
+To manage welcome backgrounds:
+```sh
+!backgrounds list              # List all available backgrounds
+!backgrounds add name URL      # Add a background from URL
+!backgrounds add name          # Add a background from attachment
+!backgrounds preview name      # Preview a background
+!backgrounds remove name       # Remove a background
+!backgrounds set-default name  # Set the default background
 ```
 
-## Running the Discord Bot
-
-1. Start the bot:
+Test welcome cards with:
 ```sh
-python main.py
+!welcome                       # Test with default background
+!welcome background-name       # Test with specific background
+!welcome random                # Test with random background
 ```
 
 ## License

@@ -9,7 +9,7 @@ from discord import Intents, Attachment, Embed, version_info as discord_version
 from responses import get_response
 import difflib  # For finding similar commands
 import discord
-from welcome_card import create_welcome_card, create_welcome_embed
+from welcome_card import create_welcome_card, create_welcome_embed, add_background, remove_background, set_default_background, list_backgrounds, create_background_preview
 
 # Load the environment variables
 load_dotenv()
@@ -41,7 +41,8 @@ COMMANDS = {
     'lumos': 'Interact with the bot using the AI model',
     'memory': 'View or clear your conversation history with the bot',
     'config': 'Configure bot settings for this server (admin only)',
-    'welcome': 'Test the welcome card feature (admin only)'
+    'welcome': 'Test the welcome card feature (admin only)',
+    'backgrounds': 'Manage welcome card backgrounds (admin only)'
 }
 
 def get_uptime() -> str:
@@ -282,20 +283,30 @@ async def on_command_error(ctx, error):
         
         await ctx.send(embed=embed)
 
-# New command for testing welcome cards
+# Enhanced welcome test command with background options
 @bot.command(name='welcome')
 @commands.has_permissions(administrator=True)
-async def test_welcome(ctx):
+async def test_welcome(ctx, background: str = None):
     """Test the welcome card feature (admin only)"""
     try:
         async with ctx.typing():
+            # Check if using a specific background
+            if background and background.lower() == "random":
+                use_random = True
+                bg_name = None
+            else:
+                use_random = False
+                bg_name = background
+            
             # Generate welcome card for the command user
             card_buffer = await create_welcome_card(
                 username=ctx.author.display_name,
                 avatar_url=ctx.author.display_avatar.url,
                 server_name=ctx.guild.name,
                 member_count=ctx.guild.member_count,
-                background_url=WELCOME_BACKGROUND_URL,
+                background_url=WELCOME_BACKGROUND_URL if not bg_name else None,
+                background_name=bg_name,
+                use_random_bg=use_random,
                 custom_message="Welcome card test!"
             )
             
@@ -324,7 +335,120 @@ async def test_welcome(ctx):
         print(f"Error in welcome command: {str(e)}")
         await ctx.send(f"Failed to generate welcome card: {str(e)}")
 
-# Add new member welcome event
+# Background management commands
+@bot.group(name="backgrounds")
+@commands.has_permissions(administrator=True)
+async def backgrounds(ctx):
+    """Manage welcome card backgrounds (admin only)"""
+    if ctx.invoked_subcommand is None:
+        await ctx.send("Please specify a subcommand. Type `!help backgrounds` for more info.")
+
+@backgrounds.command(name="list")
+async def list_bg(ctx):
+    """List all available backgrounds"""
+    backgrounds_list = list_backgrounds()
+    
+    if not backgrounds_list:
+        await ctx.send("No backgrounds available. Add backgrounds with `!backgrounds add <name> <url>`")
+        return
+    
+    embed = discord.Embed(
+        title="Welcome Card Backgrounds", 
+        description=f"Total backgrounds: {len(backgrounds_list)}", 
+        color=0x3498db
+    )
+    
+    for bg in backgrounds_list:
+        name = bg["name"]
+        status = "✅ Default" if bg["is_default"] else ""
+        embed.add_field(name=f"{name} {status}", value=f"Use: `!welcome {name}`", inline=True)
+    
+    embed.set_footer(text="Use !backgrounds preview <name> to see a preview")
+    await ctx.send(embed=embed)
+
+@backgrounds.command(name="add")
+async def add_bg(ctx, name: str, url: str = None):
+    """Add a new background from URL or attachment"""
+    if not name.isalnum():
+        await ctx.send("Background name must contain only letters and numbers.")
+        return
+    
+    # Check if URL or attachment provided
+    if not url and not ctx.message.attachments:
+        await ctx.send("Please provide a URL or attach an image.")
+        return
+    
+    attachment_data = None
+    if ctx.message.attachments:
+        # Get the first attachment
+        attachment = ctx.message.attachments[0]
+        # Check if it's an image
+        if not attachment.filename.lower().endswith(('.png', '.jpg', '.jpeg', '.gif')):
+            await ctx.send("Attachment must be an image file (PNG, JPG, JPEG, GIF).")
+            return
+        
+        # Download the attachment
+        attachment_data = await attachment.read()
+    
+    # Show typing indicator while processing
+    async with ctx.typing():
+        success = await add_background(name, url, attachment_data)
+        
+        if success:
+            # Create a preview
+            preview = await create_background_preview(name)
+            
+            embed = discord.Embed(
+                title="Background Added", 
+                description=f"Successfully added background: `{name}`", 
+                color=0x2ecc71
+            )
+            embed.add_field(name="Usage", value=f"Use `!welcome {name}` to test this background", inline=False)
+            
+            if preview:
+                await ctx.send(
+                    embed=embed, 
+                    file=discord.File(fp=preview, filename="preview.png")
+                )
+            else:
+                await ctx.send(embed=embed)
+        else:
+            await ctx.send(f"Failed to add background `{name}`. The name may be taken or the image is invalid.")
+
+@backgrounds.command(name="remove")
+async def remove_bg(ctx, name: str):
+    """Remove a background"""
+    success = remove_background(name)
+    
+    if success:
+        await ctx.send(f"Successfully removed background: `{name}`")
+    else:
+        await ctx.send(f"Failed to remove background `{name}`. It may not exist.")
+
+@backgrounds.command(name="set-default")
+async def set_default_bg(ctx, name: str):
+    """Set the default background"""
+    success = set_default_background(name)
+    
+    if success:
+        await ctx.send(f"Successfully set `{name}` as the default background!")
+    else:
+        await ctx.send(f"Failed to set default background. `{name}` may not exist.")
+
+@backgrounds.command(name="preview")
+async def preview_bg(ctx, name: str):
+    """Preview a background"""
+    preview = await create_background_preview(name)
+    
+    if preview:
+        await ctx.send(
+            content=f"Background preview for: `{name}`",
+            file=discord.File(fp=preview, filename="preview.png")
+        )
+    else:
+        await ctx.send(f"Background `{name}` not found.")
+
+# Add new member welcome event with updated background handling
 @bot.event
 async def on_member_join(member):
     """Event handler that triggers when a new member joins"""
