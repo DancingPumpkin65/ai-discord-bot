@@ -1,18 +1,55 @@
 # AI Discord Bot
 
-This is a Discord bot that uses OpenAI's GPT-4o model to generate responses to user messages. The bot is built using the `discord.py` library and interacts with the OpenAI API to generate responses.
+A powerful Discord bot that uses OpenAI's GPT-4o model to generate AI responses, create beautiful welcome cards, and enhance your server experience.
+
+## Features
+
+### 🧠 AI Conversation
+- Chat with the AI using the `!lumos` command
+- Support for image input (just attach an image to your message)
+- Multi-turn conversation with memory
+- Streaming responses for better user experience
+
+### 🎨 Welcome Cards
+- Customizable welcome cards for new members
+- Background management system
+- Member count and personalized welcome messages
+
+### ⚙️ Utility Commands
+- Help command with detailed information
+- Server stats and bot information
+- Daily announcements
 
 ## Project Structure
 
 The bot is organized into a modular structure:
 ```text
-    ai-discord-bot
-    ├── .env                   # Environment variables
-    ├── .env.example           # Example environment variables configuration
-    ├── main.py                # The main bot service that handles Discord events
-    ├── responses.py           # The module that provides responses to user inputs using your AI Model
-    ├── requirements.txt       # Project dependencies
-    └── README.md              # Project documentation
+ai-discord-bot/
+├── main.py                           # Main entry point
+├── config.py                         # Global configuration
+├── requirements.txt                  # Project dependencies
+├── .env.example                      # Example environment variables
+├── .env                              # Your actual environment variables (not in git)
+├── README.md                         # Project documentation
+├── core/                             # Core bot functionality
+│   └── ai_services.py                # AI response handling (replaces responses.py)
+├── utils/                            # Utility modules
+│   └── common.py                     # Common utility functions
+├── services/                         # Feature services
+│   └── welcome_cards/                # Welcome card service
+│       ├── config.py                 # Card configuration
+│       ├── image_utils.py            # Image processing
+│       ├── backgrounds.py            # Background management
+│       └── card_gen.py               # Card generation
+├── cogs/                             # Command handlers
+│   ├── ai.py                         # AI commands
+│   ├── backgrounds.py                # Background management
+│   ├── general.py                    # General commands
+│   └── welcome.py                    # Welcome events
+└── assets/                           # Asset directory
+    ├── fonts/                        # Custom fonts
+    └── backgrounds/                  # Welcome backgrounds
+        └── config.json               # Background configuration
 ```
 
 ## Setup
