@@ -1,54 +1,58 @@
 # AI Discord Bot
 
-This is a Discord bot that uses OpenAI's GPT-4o model to generate responses to user messages. The bot is built using the `discord` library and interacts with the OpenAI API to generate responses.
+This is a Discord bot that uses OpenAI's GPT-4o model to generate responses to user messages. The bot is built using the `discord.py` library and interacts with the OpenAI API to generate responses.
 
 ## Project Structure
 
+The bot is organized into a modular structure:
 ```text
     ai-discord-bot
     ├── .env                   # Environment variables
     ├── .env.example           # Example environment variables configuration
     ├── main.py                # The main bot service that handles Discord events
-    ├── responses.py           # The module that provides responses to user inputs using your AI Modelides responses to user inputs using your AI Model
+    ├── responses.py           # The module that provides responses to user inputs using your AI Model
     ├── requirements.txt       # Project dependencies
-    └── README.md              # Project documentation └── README.md              # Project documentation
+    └── README.md              # Project documentation
 ```
 
-## Setup## Setup
+## Setup
 
-1. Clone the repository:one the repository:
+1. Clone the repository:
 ```sh
-    git clone https://github.com/DancingPumpkin65/ai-discord-bot.git/github.com/DancingPumpkin65/ai-discord-bot.git
-    cd ai-discord-bot cd ai-discord-bot
-``````
+    git clone https://github.com/DancingPumpkin65/ai-discord-bot.git
+    cd ai-discord-bot
+```
 
-2. Create and activate a virtual environment:eate and activate a virtual environment:
+2. Create and activate a virtual environment:
 ```sh
     python -m venv env
     source env/Scripts/activate  # On Windows
-    source env/bin/activate      # On Unix or MacOS source env/bin/activate      # On Unix or MacOS
-``````
+    source env/bin/activate      # On Unix or MacOS
+```
 
-3. Install the dependencies:stall the dependencies:
+3. Install the dependencies:
 ```sh
-    pip install -r requirements.txt pip install -r requirements.txt
-``````
+    pip install -r requirements.txt
+```
 
 4. Set up the environment variables:
-    Create a `.env` file in the root directory based on `.env.example`:reate a `.env` file in the root directory based on the `.env.example` file:
+    Create a `.env` file in the root directory based on the `.env.example` file:
 ```sh
     DISCORD_TOKEN=YOUR_DISCORD_TOKEN
     OPENAI_API_KEY=YOUR_OPENAI_API_KEY
-    ANNOUNCEMENT_CHANNEL_ID=YOUR_CHANNEL_ID DISCORD_TOKEN=YOUR_DISCORD_TOKEN
-    AZURE_ENDPOINT=https://models.inference.ai.azure.com    OPENAI_API_KEY=YOUR_OPENAI_API_KEY
-    MODEL_NAME=gpt-4oD=YOUR_CHANNEL_ID
-```    AZURE_OPENAI_ENDPOINT=https://your-resource-name.openai.azure.com
-SION=2023-05-15
-## Running the Discord BotZURE_DEPLOYMENT_NAME=deployment-name
+    ANNOUNCEMENT_CHANNEL_ID=YOUR_CHANNEL_ID
+    AZURE_ENDPOINT=https://models.inference.ai.azure.com
+    MODEL_NAME=gpt-4o
+    AZURE_OPENAI_ENDPOINT=https://your-resource-name.openai.azure.com
+    AZURE_DEPLOYMENT_NAME=deployment-name
+    AZURE_API_VERSION=2023-05-15
+```
+
+## Running the Discord Bot
 
 1. Start the bot:
-```sh    For standard OpenAI API:
-python main.py
+```sh
+    python main.py
 ```
 
 ## Features
