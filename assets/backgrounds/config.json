@@ -1,4 +1,13 @@
 {
-  "default_background": null,
-  "backgrounds": {}
+    "default_background": "test4555",
+    "backgrounds": {
+        "test4555": {
+            "path": "assets/backgrounds/test4555.png",
+            "added_at": "51916.2925372"
+        },
+        "test000": {
+            "path": "assets/backgrounds/test000.png",
+            "added_at": "52890.9198037"
+        }
+    }
 }

@@ -6,6 +6,7 @@ This module handles the creation of welcome cards for new members.
 # Standard library imports
 import os
 import io
+import textwrap
 from typing import Tuple, Optional
 
 # Third-party imports
@@ -165,46 +166,55 @@ async def create_welcome_card(
                 print("Using default background")
             else:
                 print("Using solid color background")
-        
-        # Apply dark overlay for better text visibility
-        overlay = Image.new('RGBA', (cfg.CARD_WIDTH, cfg.CARD_HEIGHT), (0, 0, 0, 110))
-        card = Image.alpha_composite(card, overlay)
-        draw = ImageDraw.Draw(card)
-        
-        # Add decorative elements
-        # Top and bottom accent bars
-        draw.rectangle([(0, 0), (cfg.CARD_WIDTH, 8)], fill=accent_color)  # Top bar
-        draw.rectangle([(0, cfg.CARD_HEIGHT-8), (cfg.CARD_WIDTH, cfg.CARD_HEIGHT)], fill=accent_color)  # Bottom bar
-        
-        # Add a subtle gradient overlay
+                
+        # Apply a gradient overlay for better text visibility and aesthetic appeal
         gradient = Image.new('RGBA', (cfg.CARD_WIDTH, cfg.CARD_HEIGHT), (0, 0, 0, 0))
         gradient_draw = ImageDraw.Draw(gradient)
+        
+        # Create a dark gradient from bottom to top
         for y in range(cfg.CARD_HEIGHT):
-            # Create a gradient from top to bottom
-            alpha = int(150 - (y / cfg.CARD_HEIGHT * 80))  # Fade from visible to less visible
+            # Make the bottom darker than the top
+            alpha = int(40 + (y / cfg.CARD_HEIGHT * 160))  # 40-200 alpha range
             gradient_draw.line([(0, y), (cfg.CARD_WIDTH, y)], fill=(0, 0, 0, alpha))
         
         card = Image.alpha_composite(card, gradient)
-        draw = ImageDraw.Draw(card)
         
-        # Process avatar
+        # Add stylish side accent bars
+        accent_width = 6
+        draw = ImageDraw.Draw(card)
+        draw.rectangle([(0, 0), (accent_width, cfg.CARD_HEIGHT)], fill=accent_color)  # Left bar
+        draw.rectangle([(cfg.CARD_WIDTH-accent_width, 0), (cfg.CARD_WIDTH, cfg.CARD_HEIGHT)], fill=accent_color)  # Right bar
+        
+        # Process avatar with enhanced glow effect
         avatar = await process_avatar(avatar_url, username, accent_color)
         
         # Position avatar
         avatar_size = avatar.width
         avatar_pos_x = (cfg.CARD_WIDTH - avatar_size) // 2
-        avatar_pos_y = 120  # From top
+        avatar_pos_y = 100  # Moved higher up from 120
         
-        # Place avatar with border on card
+        # Create subtle glow effect behind avatar
+        glow_size = avatar_size + 20
+        glow = Image.new('RGBA', (glow_size, glow_size), (0, 0, 0, 0))
+        glow_draw = ImageDraw.Draw(glow)
+        glow_color = (*accent_color, 60)  # Semi-transparent accent color
+        for i in range(10, 0, -1):
+            glow_draw.ellipse((i, i, glow_size - i, glow_size - i), fill=(*accent_color, 6))
+        
+        # Position and paste glow
+        glow_pos_x = avatar_pos_x - 10
+        glow_pos_y = avatar_pos_y - 10
+        card.paste(glow, (glow_pos_x, glow_pos_y), glow)
+        
+        # Place avatar on card
         card.paste(avatar, (avatar_pos_x, avatar_pos_y), avatar)
         
-        # Rest of the function continues as before...
-        # Load fonts with fallbacks
+        # Load fonts with enhanced sizes
         try:
-            username_font = ImageFont.truetype(cfg.FONT_BOLD, 60) if cfg.FONT_BOLD else ImageFont.load_default()
-            title_font = ImageFont.truetype(cfg.FONT_BOLD, 36) if cfg.FONT_BOLD else ImageFont.load_default()
-            subtitle_font = ImageFont.truetype(cfg.FONT_REGULAR, 28) if cfg.FONT_REGULAR else ImageFont.load_default()
-            small_font = ImageFont.truetype(cfg.FONT_REGULAR, 24) if cfg.FONT_REGULAR else ImageFont.load_default()
+            username_font = ImageFont.truetype(cfg.FONT_BOLD, cfg.USERNAME_FONT_SIZE) if cfg.FONT_BOLD else ImageFont.load_default()
+            title_font = ImageFont.truetype(cfg.FONT_BOLD, cfg.WELCOME_FONT_SIZE) if cfg.FONT_BOLD else ImageFont.load_default()
+            subtitle_font = ImageFont.truetype(cfg.FONT_REGULAR, cfg.MESSAGE_FONT_SIZE) if cfg.FONT_REGULAR else ImageFont.load_default()
+            small_font = ImageFont.truetype(cfg.FONT_REGULAR, cfg.COUNT_FONT_SIZE) if cfg.FONT_REGULAR else ImageFont.load_default()
         except Exception as e:
             print(f"Error loading fonts: {e} - Using default fonts")
             username_font = ImageFont.load_default()
@@ -215,24 +225,33 @@ async def create_welcome_card(
         # Center position for text elements
         center_x = cfg.CARD_WIDTH // 2
         
-        # Calculate positions for text elements
-        welcome_y = avatar_pos_y + avatar_size + 30
-        username_y = welcome_y + 50
-        message_y = username_y + 70
-        count_y = message_y + 60
-        decoration_y = cfg.CARD_HEIGHT - 50
+        # Calculate updated positions for text elements
+        welcome_y = avatar_pos_y + avatar_size + 26  # Reduced space
+        username_y = welcome_y + 46  # Reduced space
+        message_y = username_y + 64  # Reduced space
+        count_y = message_y + 50  # Reduced space
         
         # Use smaller font for long usernames
         if len(username) > 20:
-            username_font = ImageFont.truetype(cfg.FONT_BOLD, 40) if cfg.FONT_BOLD else ImageFont.load_default()
+            username_font = ImageFont.truetype(cfg.FONT_BOLD, 48) if cfg.FONT_BOLD else ImageFont.load_default()
         
-        # Draw text elements
-        draw.text((center_x, welcome_y), "WELCOME", fill=cfg.LIGHT_TEXT, font=title_font, anchor="mt")
-        draw.text((center_x, username_y), username, fill=cfg.LIGHT_TEXT, font=username_font, anchor="mt")
+        # Add a subtle text shadow effect for better readability
+        def draw_text_with_shadow(x, y, text, font, fill, anchor="mt", shadow_color=(0,0,0,120), shadow_offset=2):
+            # Draw shadow first
+            draw.text((x+shadow_offset, y+shadow_offset), text, font=font, fill=shadow_color, anchor=anchor)
+            # Draw main text
+            draw.text((x, y), text, font=font, fill=fill, anchor=anchor)
         
-        # Draw custom or default message
+        # Draw text elements with shadows
+        draw_text_with_shadow(center_x, welcome_y, "WELCOME", title_font, cfg.HIGHLIGHT_COLOR)
+        draw_text_with_shadow(center_x, username_y, username, username_font, cfg.LIGHT_TEXT)
+        
+        # Draw custom or default message (with word wrap for long server names)
         message = custom_message or f"Welcome to {server_name}!"
-        draw.text((center_x, message_y), message, fill=cfg.LIGHT_TEXT, font=subtitle_font, anchor="mt")
+        # Wrap text if too long
+        if len(message) > 40:
+            message = "\n".join(textwrap.wrap(message, width=40, break_long_words=False))
+        draw_text_with_shadow(center_x, message_y, message, subtitle_font, cfg.LIGHT_TEXT)
         
         # Calculate ordinal suffix for member count
         if 11 <= member_count % 100 <= 13:
@@ -240,17 +259,30 @@ async def create_welcome_card(
         else:
             suffix = {1: "st", 2: "nd", 3: "rd"}.get(member_count % 10, "th")
         
-        # Draw member count
-        draw.text(
-            (center_x, count_y), 
-            f"You are the {member_count}{suffix} member", 
-            fill=cfg.SECONDARY_COLOR, 
-            font=small_font, 
-            anchor="mt"
+        # Create a highlight box for member count
+        count_text = f"You are the {member_count}{suffix} member"
+        count_width = center_x * 0.7  # 70% of center_x
+        count_height = 40
+        count_rect_x = center_x - count_width // 2
+        count_rect_y = count_y - 5
+        
+        # Draw semi-transparent background
+        draw.rectangle(
+            [(count_rect_x, count_rect_y), (count_rect_x + count_width, count_rect_y + count_height)],
+            fill=(0, 0, 0, 100),
+            outline=accent_color
         )
         
-        # Draw decorative element at bottom
-        draw.text((center_x, decoration_y), "• • •", fill=accent_color, font=subtitle_font, anchor="mt")
+        # Draw member count with highlighting
+        draw_text_with_shadow(
+            center_x, count_y + count_height//2 - 2,
+            count_text, small_font, cfg.LIGHT_TEXT,
+            anchor="mm"  # Middle-middle anchor
+        )
+        
+        # Add decorative accent at the bottom
+        decoration_y = cfg.CARD_HEIGHT - 40
+        draw.text((center_x, decoration_y), "• • •", fill=accent_color, font=subtitle_font, anchor="mm")
         
         # Save to buffer
         buffer = io.BytesIO()
