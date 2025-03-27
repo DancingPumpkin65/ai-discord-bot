@@ -10,9 +10,14 @@ The bot is organized into a modular structure:
     ├── .env                   # Environment variables
     ├── .env.example           # Example environment variables configuration
     ├── main.py                # The main bot service that handles Discord events
-    ├── responses.py           # The module that provides responses to user inputs using your AI Model
-    ├── requirements.txt       # Project dependencies
-    └── README.md              # Project documentation
+    ├── config.py              # Configuration settings
+    ├── cogs/                  # Command modules
+    ├── core/                  # Core functionality
+    ├── services/              # Service modules 
+    ├── utils/                 # Utility functions
+    ├── assets/                # Static assets
+    ├── lavalink/              # Lavalink server (music)
+    └── requirements.txt       # Project dependencies
 ```
 
 ## Setup
@@ -43,19 +48,55 @@ The bot is organized into a modular structure:
     ANNOUNCEMENT_CHANNEL_ID=YOUR_CHANNEL_ID
     AZURE_ENDPOINT=https://models.inference.ai.azure.com
     MODEL_NAME=gpt-4o
-    AZURE_OPENAI_ENDPOINT=https://your-resource-name.openai.azure.com
-    AZURE_DEPLOYMENT_NAME=deployment-name
-    AZURE_API_VERSION=2023-05-15
+    
+    # For music functionality:
+    SPOTIFY_CLIENT_ID=YOUR_SPOTIFY_CLIENT_ID
+    SPOTIFY_CLIENT_SECRET=YOUR_SPOTIFY_CLIENT_SECRET
 ```
+
+5. Set up Lavalink (required for music functionality):
+   - Make sure you have Java 11 or newer installed
+   - Run the setup script: `python setup_lavalink.py`
+   - Alternatively, download [Lavalink.jar](https://github.com/lavalink-devs/Lavalink/releases) manually and place it in the `lavalink` folder
 
 ## Running the Discord Bot
 
-1. Start the bot:
+1. Start Lavalink (if using music features):
 ```sh
+    # In one terminal:
+    cd lavalink
+    java -jar Lavalink.jar
+```
+
+2. Start the bot:
+```sh
+    # In another terminal:
     python main.py
 ```
 
 ## Features
+
+### AI Conversation
+Use the `!lumos` command to have a conversation with the AI:
+```sh
+!lumos <your question or message>  # Start a conversation with the AI
+!memory show                       # Show your conversation history
+!memory clear                      # Clear your conversation history
+```
+
+### Music Player
+The bot can play music from YouTube and Spotify:
+```sh
+!play <song name or URL>    # Play a song or add to queue
+!play <spotify playlist URL> # Play a Spotify playlist
+!pause                      # Pause the current song
+!resume                     # Resume playback
+!skip                       # Skip to the next song
+!stop                       # Stop playback and clear queue
+!queue                      # Show the current queue
+!np                         # Show the currently playing song
+!volume <0-100>             # Adjust the volume
+```
 
 ### Welcome Cards
 The bot creates beautiful welcome cards for new members with:

@@ -34,6 +34,13 @@ USE_RANDOM_BACKGROUNDS: Final[bool] = os.getenv('USE_RANDOM_BACKGROUNDS', 'false
 # Memory Configuration
 MAX_MEMORY_LENGTH: Final[int] = int(os.getenv('MAX_MEMORY_LENGTH', '10'))
 
+# Music Configuration
+SPOTIFY_CLIENT_ID: Final[str] = os.getenv('SPOTIFY_CLIENT_ID', '')
+SPOTIFY_CLIENT_SECRET: Final[str] = os.getenv('SPOTIFY_CLIENT_SECRET', '')
+LAVALINK_HOST: Final[str] = os.getenv('LAVALINK_HOST', '127.0.0.1')
+LAVALINK_PORT: Final[int] = int(os.getenv('LAVALINK_PORT', '2333'))
+LAVALINK_PASSWORD: Final[str] = os.getenv('LAVALINK_PASSWORD', 'youshallnotpass')
+
 # Available commands dictionary for suggestions
 COMMANDS = {
     'help': 'Shows the help message with available commands',
@@ -41,7 +48,12 @@ COMMANDS = {
     'ping': 'Shows the bot\'s latency',
     'lumos': 'Interact with the bot using the AI model',
     'memory': 'View or clear your conversation history with the bot',
-    'config': 'Configure bot settings for this server (admin only)',
+    'play': 'Play music from YouTube or Spotify',
+    'pause': 'Pause the current song',
+    'resume': 'Resume playback',
+    'skip': 'Skip to the next song',
+    'stop': 'Stop playback and clear the queue',
+    'queue': 'Show the current music queue',
     'welcome': 'Test the welcome card feature (admin only)',
     'backgrounds': 'Manage welcome card backgrounds (admin only)'
 }

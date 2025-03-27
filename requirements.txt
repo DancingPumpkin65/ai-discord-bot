@@ -4,3 +4,5 @@ httpx
 openai
 pillow
 aiohttp
+wavelink>=2.6.0
+spotipy>=2.23.0
